@@ -1,0 +1,56 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0f14"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LoopStation Pro</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png"><link rel="stylesheet" href="style.css"></head><body>
+<div id="startOverlay" class="overlay"><div class="panel"><h1>LoopStation <span>Pro</span></h1>
+<p>Live multi-track looper. Use <b>headphones</b> so the mic doesn't re-record your loops.</p>
+<button id="startBtn" class="big go">Start audio</button><p class="small">Press <kbd>?</kbd> anytime for shortcuts.</p></div></div>
+<header><div class="brand">LoopStation <span>Pro</span></div>
+<div class="hdrbtns"><button id="helpBtn" title="Shortcuts (?)">?</button></div></header>
+<section class="master">
+ <div class="row">
+  <button id="mPlay" class="big go" data-act="master:play">▶ Play all</button>
+  <button id="mStop" class="big" data-act="master:stop">■ Stop all</button>
+  <button id="mRec" class="big" data-act="master:rec">● Record mix</button>
+ </div>
+ <div class="row meters">
+  <label>In <div class="meter"><i id="inMeter"></i></div></label>
+  <label>Out <div class="meter"><i id="outMeter"></i></div></label>
+  <label>Master <input type="range" id="mVol" min="0" max="1.5" step="0.01" value="1"></label>
+ </div>
+ <div class="row status"><span id="loopInfo">No loop yet — record track 1 to set the loop length.</span><span id="mixInfo"></span></div>
+ <details><summary>Timing, metronome &amp; input</summary>
+  <div class="grid2">
+   <label><input type="checkbox" id="syncOn" checked> Sync to master loop</label>
+   <label><input type="checkbox" id="snapOn" checked> Snap rec start/stop to loop</label>
+   <label><input type="checkbox" id="metOn"> Metronome</label>
+   <label><input type="checkbox" id="countIn" checked> 1-bar count-in (first loop)</label>
+   <label>BPM <input type="number" id="bpm" min="40" max="240" value="100"> <button id="tapBtn" data-act="master:tap">Tap</button></label>
+   <label>Click vol <input type="range" id="clickVol" min="0" max="1" step="0.01" value="0.5"></label>
+   <label><input type="checkbox" id="lowCut"> Input low-cut (100 Hz)</label>
+   <label>Input gain <input type="range" id="inGain" min="0" max="3" step="0.01" value="1"></label>
+   <label><input type="checkbox" id="monOn"> Input monitoring (headphones only!)</label>
+   <label>Latency comp: <b id="latAuto"></b> + <input type="range" id="latMan" min="-100" max="300" step="1" value="0"> <b id="latManV">0</b> ms</label>
+   <label><button id="calBtn">Auto-calibrate (speakers, no headphones)</button> <span id="calMsg"></span></label>
+  </div></details>
+ <details><summary>Sessions, export &amp; MIDI</summary>
+  <div class="grid2">
+   <label>Name <input id="sessName" value="My session"> <button id="saveBtn">Save</button></label>
+   <label><select id="sessList"></select> <button id="loadBtn">Load</button> <button id="delBtn">Delete</button></label>
+   <label><button id="midiBtn">Enable MIDI</button> <button id="learnBtn">MIDI learn</button> <span id="midiMsg"></span></label>
+   <label><button id="addTrack">+ Track</button> <span class="small">(max 8)</span></label>
+  </div></details>
+</section>
+<main id="tracks"></main>
+<div id="help" class="overlay hidden"><div class="panel"><h2>Shortcuts</h2><ul class="keys">
+<li><kbd>1</kbd>–<kbd>8</kbd> select track</li><li><kbd>Space</kbd> record → play → overdub → play</li>
+<li><kbd>O</kbd> overdub</li><li><kbd>P</kbd> play track</li><li><kbd>S</kbd> stop track</li>
+<li><kbd>Z</kbd> undo layer · <kbd>Y</kbd> redo</li><li><kbd>Shift</kbd>+<kbd>C</kbd> clear track</li>
+<li><kbd>M</kbd> mute · <kbd>L</kbd> solo · <kbd>R</kbd> reverse · <kbd>H</kbd> half-speed</li>
+<li><kbd>Enter</kbd> play/stop all</li><li><kbd>T</kbd> tap tempo · <kbd>K</kbd> metronome</li>
+<li><kbd>W</kbd> record mix on/off</li><li><kbd>?</kbd> this help · <kbd>Esc</kbd> close</li></ul>
+<p class="small">MIDI: click <b>MIDI learn</b>, click any button, then press a pedal/pad. Mapping is saved.</p>
+<button id="helpClose" class="big">Close</button></div></div>
+<script src="app.js"></script></body></html>
