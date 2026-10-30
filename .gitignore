@@ -1,0 +1,17 @@
+# Internal agent notes
+HANDOFF.md
+SPRINT_*.md
+*_REVIEW.md
+
+# Windows / Drive sync
+desktop.ini
+Thumbs.db
+
+# Recordings
+*.wav
+*.webm
+
+# Secrets / clutter
+.env
+*.log
+node_modules/
