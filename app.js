@@ -84,7 +84,7 @@ function capRead(t,len){ // read len frames of captured input beginning at ctx t
 
 /* ---------- tracks ---------- */
 function mkTrack(i){
-  const t={i,layers:[],redo:[],len:0,origin:0,originRel:0,free:false,state:'empty',vol:.9,pan:0,rev:0,dlyS:0,mute:false,solo:false,reverse:false,half:false,buffer:null,src:null,el:null};
+  const t={i,name:`Track ${i+1}`,layers:[],redo:[],len:0,origin:0,originRel:0,free:false,state:'empty',vol:.9,pan:0,rev:0,dlyS:0,mute:false,solo:false,reverse:false,half:false,buffer:null,src:null,el:null};
   t.g=ctx.createGain(); t.p=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain();
   t.rs=ctx.createGain(); t.ds=ctx.createGain(); t.rs.gain.value=0; t.ds.gain.value=0;
   t.g.connect(t.p); t.p.connect(master); t.p.connect(t.rs); t.p.connect(t.ds); t.rs.connect(revIn); t.ds.connect(dlyIn);
@@ -96,7 +96,7 @@ function mkTrack(i){
 function buildTrackUI(t){
   const el=document.createElement('div'); el.className='track'; el.dataset.state='empty';
   const a=x=>`data-act="t${t.i}:${x}"`;
-  el.innerHTML=`<div class="thead"><span class="tname">Track ${t.i+1}</span><span class="len small"></span><span class="st">empty</span></div>
+  el.innerHTML=`<div class="thead"><span class="tname" contenteditable="true" spellcheck="false" role="textbox" aria-label="Track ${t.i+1} name" title="Click to rename">${t.name}</span><span class="len small"></span><span class="st">empty</span></div>
   <div class="wave"><canvas></canvas><div class="ph"></div><div class="arm-cd"></div><div class="wave-cta">Rec or Space to set the loop</div></div>
   <div class="tbtns"><button class="r" ${a('rec')}>● Rec</button><button class="o" ${a('dub')}>⊕ Dub</button><button class="p" ${a('play')}>▶ Play</button><button class="x" ${a('stop')}>■ Stop</button>
   <button class="u" ${a('undo')}>↶ Undo</button><button class="y" ${a('redo')}>↷ Redo</button><button class="m" ${a('mute')}>Mute</button><button class="s" ${a('solo')}>Solo</button>
@@ -112,6 +112,10 @@ function buildTrackUI(t){
   el.querySelector('.kp').oninput=e=>{t.pan=+e.target.value; if(t.p.pan)t.p.pan.value=t.pan};
   el.querySelector('.kr').oninput=e=>{t.rev=+e.target.value;t.rs.gain.value=t.rev};
   el.querySelector('.kd').oninput=e=>{t.dlyS=+e.target.value;t.ds.gain.value=t.dlyS};
+  const tn=el.querySelector('.tname');
+  tn.addEventListener('input',()=>{ t.name=tn.textContent.replace(/\s+/g,' ').trim()||`Track ${t.i+1}`; });
+  tn.addEventListener('blur',()=>{ t.name=tn.textContent.replace(/\s+/g,' ').trim()||`Track ${t.i+1}`; tn.textContent=t.name; });
+  tn.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();tn.blur();} });
   t.el=el; t.cv=el.querySelector('canvas'); t.ph=el.querySelector('.ph'); $('tracks').appendChild(el);
 }
 function setState(t,s){
@@ -131,6 +135,7 @@ function updateArmedCountdowns(n){
 }
 function refreshUI(t){
   const q=c=>t.el.querySelector(c);
+  const tn=q('.tname'); if(tn&&document.activeElement!==tn&&tn.textContent!==t.name) tn.textContent=t.name;
   q('.m').classList.toggle('on',t.mute);q('.s').classList.toggle('on',t.solo);q('.rv').classList.toggle('on',t.reverse);
   q('.h').classList.toggle('on',t.half);q('.fr').textContent=t.free?'Free':'Sync';q('.fr').classList.toggle('on',t.free);
   q('.p').classList.toggle('on',t.state==='playing'||t.state==='overdubbing');
@@ -279,7 +284,7 @@ function clearTrack(t,keepUndo){
   if(keepUndo&&t.layers.length){
     t.clearedState={layers:t.layers.slice(),redo:t.redo.slice(),len:t.len,origin:t.origin,originRel:t.originRel,free:t.free,M:M?{len:M.len,t0:M.t0}:null};
     t.redo=t.layers.slice();
-  } else { t.clearedState=null; t.redo=[]; }
+  } else { t.clearedState=null; t.redo=[]; t.name=`Track ${t.i+1}`; }
   t.layers=[]; t.len=0; t.buffer=null; t.free=false; setState(t,'empty'); drawWave(t);
   if(!anyContent()){M=null;playing=false;} loopInfo();
 }
@@ -378,7 +383,7 @@ function draw(){
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{
-  if(e.target.matches('input[type=text],input:not([type]),input[type=number],select')) return;
+  if(e.target.matches('input[type=text],input:not([type]),input[type=number],select,[contenteditable]')||e.target.isContentEditable) return;
   const k=e.key;
   if(k==='?'){toggleHelp();return} if(k==='Escape'){$('help').classList.add('hidden');return}
   if(!ctx)return;
@@ -427,7 +432,7 @@ async function dbDo(mode,fn){ const d=await db(); return new Promise((res,rej)=>
 async function listSessions(){ const all=await dbDo('readonly',s=>s.getAll()); $('sessList').innerHTML=all.map(s=>`<option>${s.name.replace(/</g,'&lt;')}</option>`).join(''); return all.map(s=>s.name); }
 async function saveSession(){
   const name=$('sessName').value.trim()||'Session';
-  const data={name,date:Date.now(),sr,S:{...S},M:M?{len:M.len}:null,tracks:tracks.map(t=>({layers:t.layers,len:t.len,originRel:t.originRel,free:t.free,vol:t.vol,pan:t.pan,rev:t.rev,dlyS:t.dlyS,mute:t.mute,solo:t.solo,reverse:t.reverse,half:t.half}))};
+  const data={name,date:Date.now(),sr,S:{...S},M:M?{len:M.len}:null,tracks:tracks.map(t=>({name:t.name,layers:t.layers,len:t.len,originRel:t.originRel,free:t.free,vol:t.vol,pan:t.pan,rev:t.rev,dlyS:t.dlyS,mute:t.mute,solo:t.solo,reverse:t.reverse,half:t.half}))};
   await dbDo('readwrite',s=>s.put(data)); await listSessions(); $('sessList').value=name; $('mixInfo').textContent='Saved session "'+name+'"';
 }
 async function loadSession(name){
@@ -435,8 +440,8 @@ async function loadSession(name){
   masterStop(); tracks.forEach(t=>clearTrack(t,false));
   while(tracks.length<d.tracks.length) mkTrack(tracks.length);
   M=d.M?{len:d.M.len,t0:now()}:null; Object.assign(S,d.S); syncSettingsUI();
-  d.tracks.forEach((s,i)=>{ const t=tracks[i]; Object.assign(t,{layers:s.layers,redo:[],len:s.len,originRel:s.originRel,free:s.free,vol:s.vol,pan:s.pan,rev:s.rev,dlyS:s.dlyS,mute:s.mute,solo:s.solo,reverse:s.reverse,half:s.half});
-    const q=c=>t.el.querySelector(c); q('.kv').value=t.vol;q('.kp').value=t.pan;q('.kr').value=t.rev;q('.kd').value=t.dlyS; if(t.p.pan)t.p.pan.value=t.pan; t.rs.gain.value=t.rev; t.ds.gain.value=t.dlyS;
+  d.tracks.forEach((s,i)=>{ const t=tracks[i]; Object.assign(t,{name:s.name||`Track ${i+1}`,layers:s.layers,redo:[],len:s.len,originRel:s.originRel,free:s.free,vol:s.vol,pan:s.pan,rev:s.rev,dlyS:s.dlyS,mute:s.mute,solo:s.solo,reverse:s.reverse,half:s.half});
+    const q=c=>t.el.querySelector(c); q('.tname').textContent=t.name; q('.kv').value=t.vol;q('.kp').value=t.pan;q('.kr').value=t.rev;q('.kd').value=t.dlyS; if(t.p.pan)t.p.pan.value=t.pan; t.rs.gain.value=t.rev; t.ds.gain.value=t.dlyS;
     renderTrack(t); setState(t,t.layers.length?'stopped':'empty'); });
   if(d.sr!==sr) $('mixInfo').textContent='Note: session sample rate differs ('+d.sr+')';
   updateGains(); loopInfo(); $('sessName').value=name;
@@ -472,4 +477,5 @@ $('startBtn').onclick=async()=>{ try{ await startAudio(); for(let i=0;i<4;i++) m
 if(window.innerWidth<=480) document.querySelectorAll('.master details').forEach(d=>{d.open=false});
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
-window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency};
+function renameTrack(i,name){ const t=tracks[i]; if(!t)return; t.name=(name||'').trim()||`Track ${i+1}`; refreshUI(t); }
+window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency,renameTrack};

@@ -40,7 +40,8 @@ details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{curs
 .track[data-state=armed]{border-color:#e0a800;box-shadow:0 0 18px #e0a80055}
 .track[data-state=playing]{border-color:#2c9a5e;box-shadow:0 0 14px #2c9a5e38}
 .thead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px}
-.tname{font-weight:700;font-size:16px;letter-spacing:.15px;color:#f2f4fa}
+.tname{font-weight:700;font-size:16px;letter-spacing:.15px;color:#f2f4fa;padding:1px 6px;margin:-1px -6px;border-radius:6px;border:1px solid transparent;cursor:text;outline:none;transition:border-color .15s,background .15s}
+.tname:hover{border-color:#323b54;background:#1c2233}.tname:focus{border-color:#7088d0;background:#1a2030}
 .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 10px;border-radius:999px;background:#232838;color:#b8c0d8}
 [data-state=recording] .st,[data-state=overdubbing] .st{background:#ff4d5e;color:#fff}
 [data-state=armed] .st{background:#e0a800;color:#000}[data-state=playing] .st{background:#2c9a5e;color:#fff}
