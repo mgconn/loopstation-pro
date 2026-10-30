@@ -97,7 +97,7 @@ function buildTrackUI(t){
   const el=document.createElement('div'); el.className='track'; el.dataset.state='empty';
   const a=x=>`data-act="t${t.i}:${x}"`;
   el.innerHTML=`<div class="thead"><span class="tname">Track ${t.i+1}</span><span class="len small"></span><span class="st">empty</span></div>
-  <div class="wave"><canvas></canvas><div class="ph"></div></div>
+  <div class="wave"><canvas></canvas><div class="ph"></div><div class="arm-cd"></div></div>
   <div class="tbtns"><button class="r" ${a('rec')}>● Rec</button><button class="o" ${a('dub')}>⊕ Dub</button><button class="p" ${a('play')}>▶ Play</button><button class="x" ${a('stop')}>■ Stop</button>
   <button class="u" ${a('undo')}>↶ Undo</button><button class="y" ${a('redo')}>↷ Redo</button><button class="m" ${a('mute')}>Mute</button><button class="s" ${a('solo')}>Solo</button>
   <button class="rv" ${a('reverse')}>Rev ⇄</button><button class="h" ${a('half')}>½ spd</button><button class="fr" ${a('free')}>Sync</button><button class="c" ${a('clear')}>Clear</button></div>
@@ -114,7 +114,21 @@ function buildTrackUI(t){
   el.querySelector('.kd').oninput=e=>{t.dlyS=+e.target.value;t.ds.gain.value=t.dlyS};
   t.el=el; t.cv=el.querySelector('canvas'); t.ph=el.querySelector('.ph'); $('tracks').appendChild(el);
 }
-function setState(t,s){t.state=s;t.el.dataset.state=s;t.el.querySelector('.st').textContent=s;refreshUI(t)}
+function setState(t,s){
+  t.state=s;t.el.dataset.state=s;t.el.querySelector('.st').textContent=s;
+  const cd=t.el.querySelector('.arm-cd'); if(cd&&s!=='armed'){cd.textContent='';cd.style.display='none';}
+  refreshUI(t);
+}
+function updateArmedCountdowns(n){
+  for(const p of pending){
+    if(p.end===null&&p.t.state==='armed'){
+      const rem=Math.max(0,p.start-n), beats=Math.max(0,Math.ceil(rem/(60/S.bpm)));
+      p.t.el.querySelector('.st').textContent=`armed · ${rem.toFixed(1)}s`;
+      const cd=p.t.el.querySelector('.arm-cd');
+      if(cd){ cd.textContent=`Armed — starts in ${rem.toFixed(1)}s (${beats} beat${beats===1?'':'s'})`; cd.style.display='flex'; }
+    }
+  }
+}
 function refreshUI(t){
   const q=c=>t.el.querySelector(c);
   q('.m').classList.toggle('on',t.mute);q('.s').classList.toggle('on',t.solo);q('.rv').classList.toggle('on',t.reverse);
@@ -156,6 +170,7 @@ function beginRec(t,mode){ // mode: 'rec' | 'dub'
   }
   if(mode==='rec'){ t.free=!S.sync||t.free; }
   pending.push({t,mode,start,end:null}); setState(t,start>n+0.03?'armed':(mode==='dub'?'overdubbing':'recording'));
+  if(t.state==='armed') updateArmedCountdowns(n);
   if(mode==='dub'&&!t.src&&playing) startSrc(t,now()+.02);
 }
 function endRec(p){
@@ -192,9 +207,13 @@ function finalize(p){
 function tick(){
   const n=now();
   for(const p of [...pending]){
-    if(p.end===null && n>=p.start && p.t.state==='armed') setState(p.t,p.mode==='dub'?'overdubbing':'recording');
+    if(p.end===null && n>=p.start && p.t.state==='armed'){
+      p.t.el.querySelector('.st').textContent='armed · 0.0s';
+      setState(p.t,p.mode==='dub'?'overdubbing':'recording');
+    }
     if(p.end!==null && n>=p.end+latency()+0.12) finalize(p);
   }
+  updateArmedCountdowns(n);
   metSchedule();
 }
 function loopInfo(){ $('loopInfo').textContent=M?`Master loop ${(M.len/sr).toFixed(2)} s${S.met?` · ${S.bpm} BPM`:''} · ${tracks.filter(t=>t.layers.length).length} track(s) with audio · ${playing?'playing':'stopped'}`:'No loop yet — record track 1 to set the loop length.'; }
@@ -315,6 +334,7 @@ function drawWave(t){
 function peak(an){const a=new Float32Array(an.fftSize);an.getFloatTimeDomainData(a);let m=0;for(const v of a)m=Math.max(m,Math.abs(v));return m}
 function draw(){
   const n=now();
+  updateArmedCountdowns(n);
   $('inMeter').style.width=Math.min(100,Math.sqrt(peak(inAn))*100)+'%'; $('outMeter').style.width=Math.min(100,Math.sqrt(peak(outAn))*100)+'%';
   for(const t of tracks){ if(t.src&&t.len){ const rate=t.half?.5:1, eff=t.len/sr/rate; const ph=(((n-(ctx.outputLatency||0)-t.origin)%eff)+eff)%eff/eff; t.ph.style.display='block'; t.ph.style.left=(ph*100)+'%'; } else t.ph.style.display='none'; }
   requestAnimationFrame(draw);
