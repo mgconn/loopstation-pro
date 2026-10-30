@@ -58,3 +58,6 @@ details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{curs
 .keys{padding-left:18px}kbd{background:#232838;border:1px solid #444c66;border-radius:5px;padding:1px 6px;font-size:13px}
 body.learning [data-act]{outline:2px dashed #e0a800}
 body.learning [data-act].learnSel{outline:3px solid #ff4d5e}
+.midi-map-wrap{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px}.midi-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.midi-item{display:inline-flex;align-items:center;gap:6px;background:#1a1f2e;border:1px solid #303850;border-radius:8px;padding:3px 8px;font-size:12.5px}
+.midi-item button{min-height:26px;padding:2px 8px;font-size:11.5px;border-radius:6px}#midiClearAll.hidden{display:none}

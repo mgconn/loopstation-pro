@@ -386,15 +386,29 @@ function toggleHelp(){ $('help').classList.toggle('hidden'); }
 
 /* ---------- MIDI ---------- */
 let learning=false, learnTarget=null, midiMap=JSON.parse(localStorage.getItem('lp.midi')||'{}');
+function renderMidiList(){
+  const list=$('midiList'), clr=$('midiClearAll'); if(!list)return;
+  const entries=Object.entries(midiMap);
+  list.innerHTML=entries.map(([k,act])=>`<li class="midi-item" data-midi-key="${k}"><code>${k} → ${act}</code> <button type="button" class="midi-rm" data-rm="${k}">Remove</button></li>`).join('');
+  list.querySelectorAll('.midi-rm').forEach(b=>{
+    b.onclick=()=>{
+      const k=b.dataset.rm; delete midiMap[k];
+      localStorage.setItem('lp.midi',JSON.stringify(midiMap));
+      $('midiMsg').textContent=`Removed ${k} · ${Object.keys(midiMap).length} mapping(s)`;
+      renderMidiList();
+    };
+  });
+  if(clr) clr.classList.toggle('hidden',entries.length===0);
+}
 async function enableMidi(){
   if(!navigator.requestMIDIAccess){ $('midiMsg').textContent='Web MIDI not supported here (use Chrome/Edge; not iOS Safari).'; return; }
-  try{ const acc=await navigator.requestMIDIAccess(); const hook=()=>{ let c=0; acc.inputs.forEach(i=>{i.onmidimessage=onMidi;c++}); $('midiMsg').textContent=c+' MIDI input(s) · '+Object.keys(midiMap).length+' mapping(s)'; }; hook(); acc.onstatechange=hook; }
+  try{ const acc=await navigator.requestMIDIAccess(); const hook=()=>{ let c=0; acc.inputs.forEach(i=>{i.onmidimessage=onMidi;c++}); $('midiMsg').textContent=c+' MIDI input(s) · '+Object.keys(midiMap).length+' mapping(s)'; renderMidiList(); }; hook(); acc.onstatechange=hook; }
   catch(e){ $('midiMsg').textContent='MIDI blocked: '+e.message; }
 }
 function onMidi(m){ const [st,d1,d2]=m.data, type=st&0xf0; let key=null;
   if(type===0x90&&d2>0) key='n'+d1; else if(type===0xb0&&d2>63) key='c'+d1; else if(type===0xc0) key='p'+d1;
   if(!key)return;
-  if(learning&&learnTarget){ midiMap[key]=learnTarget.dataset.act; localStorage.setItem('lp.midi',JSON.stringify(midiMap)); $('midiMsg').textContent=`Mapped ${key} → ${learnTarget.dataset.act}`; learnTarget.classList.remove('learnSel'); learnTarget=null; return; }
+  if(learning&&learnTarget){ midiMap[key]=learnTarget.dataset.act; localStorage.setItem('lp.midi',JSON.stringify(midiMap)); $('midiMsg').textContent=`Mapped ${key} → ${learnTarget.dataset.act}`; learnTarget.classList.remove('learnSel'); learnTarget=null; renderMidiList(); return; }
   if(midiMap[key]){ const a=midiMap[key]; const ti=/^t(\d)/.exec(a); if(ti) while(tracks.length<=+ti[1]&&tracks.length<MAXT) mkTrack(tracks.length); doAct(a); }
 }
 function learnPick(b){ if(learnTarget) learnTarget.classList.remove('learnSel'); learnTarget=b; b.classList.add('learnSel'); $('midiMsg').textContent='Now press a pedal/pad/key on your controller…'; }
@@ -439,6 +453,8 @@ $('calBtn').onclick=calibrate; $('helpBtn').onclick=toggleHelp; $('helpClose').o
 $('saveBtn').onclick=saveSession; $('loadBtn').onclick=()=>$('sessList').value&&loadSession($('sessList').value);
 $('delBtn').onclick=async()=>{ const n=$('sessList').value; if(n&&confirm('Delete session "'+n+'"?')){ await dbDo('readwrite',s=>s.delete(n)); listSessions(); } };
 $('midiBtn').onclick=enableMidi;
+$('midiClearAll')&&($('midiClearAll').onclick=()=>{ midiMap={}; localStorage.setItem('lp.midi','{}'); $('midiMsg').textContent='Cleared all MIDI mappings'; renderMidiList(); });
+renderMidiList();
 $('learnBtn').onclick=()=>{ learning=!learning; document.body.classList.toggle('learning',learning); $('learnBtn').classList.toggle('on',learning); $('learnBtn').textContent=learning?'Done learning':'MIDI learn'; if(learning){enableMidi(); $('midiMsg').textContent='Click a button, then press a controller pedal/pad.'} };
 function dismissCoach(){ localStorage.setItem('lp.coachDismissed','1'); $('coach')?.classList.add('hidden'); tracks.forEach(t=>t.el?.classList.remove('coach-highlight')); }
 function showCoachIfNeeded(){ if(!localStorage.getItem('lp.coachDismissed')){ $('coach')?.classList.remove('hidden'); tracks[0]?.el?.classList.add('coach-highlight'); } }
