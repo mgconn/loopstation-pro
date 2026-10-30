@@ -1,8 +1,14 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const MAXT=8, CAPSEC=120;
-let ctx,sr,inSrc,hp,inGainN,inAn,capNode,master,outAn,monGain,revIn,dlyIn,dly,clickBus,mixTap;
+let ctx,sr,inSrc,hp,inGainN,inAn,capNode,master,outAn,monGain,revIn,dlyIn,dly,clickBus,mixTap,audioMode='none';
 const cap={buf:null,n:0,t0:null};
+function capPush(d,t0){
+  const N=cap.buf.length;
+  if(cap.t0===null) cap.t0=t0;
+  for(let i=0;i<d.length;i++) cap.buf[(cap.n+i)%N]=d[i];
+  cap.n+=d.length;
+}
 let M=null; // master loop {len (frames), t0 (ctx sec)}
 let playing=false, sel=0, tracks=[], pending=[];
 const S={sync:true,snap:true,met:false,countIn:true,bpm:100,latMan:0};
@@ -21,25 +27,50 @@ async function startAudio(){
   const dlf=ctx.createBiquadFilter(); dlf.type='lowpass'; dlf.frequency.value=4500;
   dlyIn.connect(dly); dly.connect(dlf); dlf.connect(fb); fb.connect(dly); dlf.connect(master); setDelayTime();
   clickBus=ctx.createGain(); clickBus.gain.value=+$('clickVol').value; clickBus.connect(ctx.destination);
-  // mix recorder tap
-  mixTap=ctx.createScriptProcessor(4096,2,2); const sil=ctx.createGain(); sil.gain.value=0;
-  outAn.connect(mixTap); mixTap.connect(sil); sil.connect(ctx.destination);
-  mixTap.onaudioprocess=e=>{ if(mixRec){ mixRec.L.push(new Float32Array(e.inputBuffer.getChannelData(0))); mixRec.R.push(new Float32Array(e.inputBuffer.getChannelData(1))); } };
+  // AudioWorklet with ScriptProcessor fallback for mix tap + input capture
+  let useWorklet=false;
+  if(ctx.audioWorklet && !window.__forceScriptProcessor){
+    try{ await ctx.audioWorklet.addModule('worklet.js'); useWorklet=true; }
+    catch(e){ useWorklet=false; }
+  }
+  const sil=ctx.createGain(); sil.gain.value=0; sil.connect(ctx.destination);
+  if(useWorklet){
+    try{
+      mixTap=new AudioWorkletNode(ctx,'lp-mix-processor',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[2]});
+      mixTap.port.onmessage=e=>{ if(mixRec){ mixRec.L.push(new Float32Array(e.data.L)); mixRec.R.push(new Float32Array(e.data.R)); } };
+      outAn.connect(mixTap); mixTap.connect(sil);
+    }catch(e){ useWorklet=false; }
+  }
+  if(!useWorklet){
+    mixTap=ctx.createScriptProcessor(4096,2,2);
+    outAn.connect(mixTap); mixTap.connect(sil);
+    mixTap.onaudioprocess=e=>{ if(mixRec){ mixRec.L.push(new Float32Array(e.inputBuffer.getChannelData(0))); mixRec.R.push(new Float32Array(e.inputBuffer.getChannelData(1))); } };
+  }
   // input
   const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,latency:0}});
   inSrc=ctx.createMediaStreamSource(stream);
   hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=10;
   inGainN=ctx.createGain(); inAn=ctx.createAnalyser(); inAn.fftSize=1024;
   monGain=ctx.createGain(); monGain.gain.value=0;
-  capNode=ctx.createScriptProcessor(1024,1,1); const sil2=ctx.createGain(); sil2.gain.value=0;
-  inSrc.connect(hp); hp.connect(inGainN); inGainN.connect(inAn); inGainN.connect(capNode); inGainN.connect(monGain); monGain.connect(master);
-  capNode.connect(sil2); sil2.connect(ctx.destination);
-  capNode.onaudioprocess=e=>{
-    const d=e.inputBuffer.getChannelData(0), N=cap.buf.length;
-    if(cap.t0===null) cap.t0=e.playbackTime-d.length/sr;
-    for(let i=0;i<d.length;i++) cap.buf[(cap.n+i)%N]=d[i];
-    cap.n+=d.length;
-  };
+  const sil2=ctx.createGain(); sil2.gain.value=0; sil2.connect(ctx.destination);
+  inSrc.connect(hp); hp.connect(inGainN); inGainN.connect(inAn); inGainN.connect(monGain); monGain.connect(master);
+  if(useWorklet){
+    try{
+      capNode=new AudioWorkletNode(ctx,'lp-capture-processor',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});
+      capNode.port.onmessage=e=>capPush(e.data.d,e.data.t0);
+      inGainN.connect(capNode); capNode.connect(sil2);
+      audioMode='worklet';
+    }catch(e){ useWorklet=false; }
+  }
+  if(!useWorklet){
+    capNode=ctx.createScriptProcessor(1024,1,1);
+    inGainN.connect(capNode); capNode.connect(sil2);
+    capNode.onaudioprocess=e=>{
+      const d=e.inputBuffer.getChannelData(0);
+      capPush(d,e.playbackTime-d.length/sr);
+    };
+    audioMode='scriptprocessor';
+  }
   $('latAuto').textContent=Math.round(((ctx.baseLatency||0)+(ctx.outputLatency||0))*1000)+' ms';
   setInterval(tick,20); requestAnimationFrame(draw);
 }
@@ -368,4 +399,4 @@ $('startBtn').onclick=async()=>{ try{ await startAudio(); for(let i=0;i<4;i++) m
   catch(e){ $('startBtn').textContent='Mic error: '+e.message+' — tap to retry'; ctx&&ctx.close(); ctx=null; } };
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
-window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},S,doAct,calibrate,saveSession,loadSession,listSessions,latency};
+window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency};
