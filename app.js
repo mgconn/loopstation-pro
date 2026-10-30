@@ -488,6 +488,18 @@ $('coachDismiss')&&($('coachDismiss').onclick=dismissCoach);
 $('addTrack').onclick=()=>{ if(ctx&&tracks.length<MAXT){ mkTrack(tracks.length); } };
 $('startBtn').onclick=async()=>{ try{ await startAudio(); for(let i=0;i<4;i++) mkTrack(i); selectTrack(0); $('startOverlay').classList.add('hidden'); showCoachIfNeeded(); listSessions().catch(()=>{}); }
   catch(e){ $('startBtn').textContent='Mic error: '+e.message+' — tap to retry'; ctx&&ctx.close(); ctx=null; } };
+let deferredInstall=null;
+function updateInstallHint(){
+  const el=$('installHint'); if(!el)return;
+  const standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;
+  const installable=!standalone&&(!!deferredInstall||('serviceWorker' in navigator&&location.protocol!=='file:'));
+  el.classList.toggle('hidden',!installable);
+  $('installBtn')?.classList.toggle('hidden',!deferredInstall);
+}
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; updateInstallHint(); });
+window.addEventListener('appinstalled',()=>{ deferredInstall=null; $('installHint')?.classList.add('hidden'); });
+if($('installBtn')) $('installBtn').onclick=async()=>{ if(!deferredInstall)return; deferredInstall.prompt(); await deferredInstall.userChoice.catch(()=>{}); deferredInstall=null; updateInstallHint(); };
+updateInstallHint();
 if(window.innerWidth<=480) document.querySelectorAll('.master details').forEach(d=>{d.open=false});
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
