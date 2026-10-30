@@ -280,11 +280,29 @@ function masterStop(){ playing=false; pending.slice().forEach(p=>{ if(p.end===nu
 
 /* ---------- metronome / tempo ---------- */
 let metGrid=null, nextClick=null, taps=[];
+function updateMetPulse(){
+  const el=$('metBeat'); if(!el)return;
+  if(!S.met){
+    el.classList.remove('active','pulse','accent'); el.removeAttribute('data-active-beat');
+    el.querySelectorAll('.bdot').forEach(d=>d.classList.remove('on','accent','pulse'));
+    return;
+  }
+  const n=ctx?now():performance.now()/1000, grid=M?M.t0:(metGrid??(metGrid=n)), beat=60/S.bpm;
+  const elapsed=n-grid, idx=((Math.floor(elapsed/beat)%4)+4)%4, phase=(((elapsed/beat)%1)+1)%1;
+  const isPulse=phase*beat<0.14, isAcc=idx===0;
+  el.classList.add('active'); el.classList.toggle('pulse',isPulse); el.classList.toggle('accent',isAcc);
+  el.dataset.activeBeat=String(idx+1);
+  el.querySelectorAll('.bdot').forEach((d,i)=>{
+    const on=i===idx;
+    d.classList.toggle('on',on); d.classList.toggle('accent',on&&isAcc); d.classList.toggle('pulse',on&&isPulse);
+  });
+}
 function metSchedule(){
-  if(!S.met){nextClick=null;return}
+  if(!S.met){nextClick=null;updateMetPulse();return}
   const grid=M?M.t0:(metGrid??(metGrid=now())), beat=60/S.bpm, n=now();
   if(nextClick===null||nextClick<n) nextClick=nextBoundary(n+0.01,grid,beat);
   while(nextClick<n+0.12){ const idx=Math.round((nextClick-grid)/beat); click(nextClick, ((idx%4)+4)%4===0); nextClick+=beat; }
+  updateMetPulse();
 }
 function click(t,acc){ const o=ctx.createOscillator(),g=ctx.createGain(); o.frequency.value=acc?1600:1000; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(1,t+.001); g.gain.exponentialRampToValueAtTime(.001,t+.05); o.connect(g); g.connect(clickBus); o.start(t); o.stop(t+.06); }
 function tap(){ const n=performance.now(); taps=taps.filter(x=>n-x<2500); taps.push(n); if(taps.length>1){ const iv=(taps[taps.length-1]-taps[0])/(taps.length-1); setBpm(Math.round(60000/iv)); } $('tapBtn').classList.add('on'); setTimeout(()=>$('tapBtn').classList.remove('on'),100); }
@@ -335,6 +353,7 @@ function peak(an){const a=new Float32Array(an.fftSize);an.getFloatTimeDomainData
 function draw(){
   const n=now();
   updateArmedCountdowns(n);
+  updateMetPulse();
   $('inMeter').style.width=Math.min(100,Math.sqrt(peak(inAn))*100)+'%'; $('outMeter').style.width=Math.min(100,Math.sqrt(peak(outAn))*100)+'%';
   for(const t of tracks){ if(t.src&&t.len){ const rate=t.half?.5:1, eff=t.len/sr/rate; const ph=(((n-(ctx.outputLatency||0)-t.origin)%eff)+eff)%eff/eff; t.ph.style.display='block'; t.ph.style.left=(ph*100)+'%'; } else t.ph.style.display='none'; }
   requestAnimationFrame(draw);
@@ -397,7 +416,7 @@ function saveSettings(){ localStorage.setItem('lp.settings',JSON.stringify(S)); 
 function syncSettingsUI(){ $('syncOn').checked=S.sync;$('snapOn').checked=S.snap;$('metOn').checked=S.met;$('countIn').checked=S.countIn;$('bpm').value=S.bpm;$('latMan').value=S.latMan;$('latManV').textContent=S.latMan; }
 Object.assign(S,JSON.parse(localStorage.getItem('lp.settings')||'{}')); S.met=false; syncSettingsUI();
 $('syncOn').onchange=e=>{S.sync=e.target.checked;saveSettings()}; $('snapOn').onchange=e=>{S.snap=e.target.checked;saveSettings()};
-$('metOn').onchange=e=>{S.met=e.target.checked;nextClick=null;loopInfo()}; $('countIn').onchange=e=>{S.countIn=e.target.checked;saveSettings()};
+$('metOn').onchange=e=>{S.met=e.target.checked;if(S.met&&!M)metGrid=ctx?now():performance.now()/1000;nextClick=null;updateMetPulse();loopInfo()}; $('countIn').onchange=e=>{S.countIn=e.target.checked;saveSettings()};
 $('bpm').onchange=e=>{setBpm(+e.target.value);saveSettings()}; $('tapBtn').onclick=e=>{ if(learning)return learnPick(e.target); tap(); };
 $('latMan').oninput=e=>{S.latMan=+e.target.value;$('latManV').textContent=S.latMan;saveSettings()};
 $('clickVol').oninput=e=>{ if(clickBus) clickBus.gain.value=+e.target.value };
