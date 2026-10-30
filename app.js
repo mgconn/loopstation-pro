@@ -216,7 +216,11 @@ function tick(){
   updateArmedCountdowns(n);
   metSchedule();
 }
-function loopInfo(){ $('loopInfo').textContent=M?`Master loop ${(M.len/sr).toFixed(2)} s${S.met?` · ${S.bpm} BPM`:''} · ${tracks.filter(t=>t.layers.length).length} track(s) with audio · ${playing?'playing':'stopped'}`:'No loop yet — record track 1 to set the loop length.'; }
+function loopInfo(){
+  $('loopInfo').textContent=M?`Master loop ${(M.len/sr).toFixed(2)} s${S.met?` · ${S.bpm} BPM`:''} · ${tracks.filter(t=>t.layers.length).length} track(s) with audio · ${playing?'playing':'stopped'}`:'No loop yet — record track 1 to set the loop length.';
+  if($('mPlay')){ $('mPlay').classList.toggle('playing',playing); $('mPlay').classList.toggle('on',playing); }
+  if($('mStop')) $('mStop').classList.toggle('on',!playing&&!!M);
+}
 
 /* ---------- actions ---------- */
 function doAct(a){
@@ -325,8 +329,8 @@ async function calibrate(){
 /* ---------- mix recording / WAV ---------- */
 let mixRec=null;
 function toggleMix(){
-  if(!mixRec){ mixRec={L:[],R:[]}; $('mRec').classList.add('on'); $('mRec').textContent='■ Stop mix rec'; $('mixInfo').textContent='● Recording performance…'; }
-  else { const r=mixRec; mixRec=null; $('mRec').classList.remove('on'); $('mRec').textContent='● Record mix';
+  if(!mixRec){ mixRec={L:[],R:[]}; $('mRec').classList.add('on','rec-active'); $('mRec').textContent='■ Stop mix rec'; $('mixInfo').textContent='● Recording performance…'; }
+  else { const r=mixRec; mixRec=null; $('mRec').classList.remove('on','rec-active'); $('mRec').textContent='● Record mix';
     const cat=a=>{const n=a.reduce((s,x)=>s+x.length,0),o=new Float32Array(n);let k=0;for(const x of a){o.set(x,k);k+=x.length}return o};
     const L=cat(r.L),R=cat(r.R); download(encodeWav([L,R]),`performance-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.wav`);
     $('mixInfo').textContent=`Saved mix ${(L.length/sr).toFixed(1)} s`; }
