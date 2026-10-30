@@ -50,10 +50,11 @@ details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{curs
 .wave-cta{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8c96b5;font-size:13px;font-weight:500;letter-spacing:.2px;pointer-events:none;z-index:1;text-align:center;padding:0 12px}
 .track.sel[data-state=empty] .wave-cta:not(.hidden){display:flex}
 .tbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.tbtns button{padding:8px 6px;min-width:0;font-size:13.5px}
+.tbtns .r,.tbtns .o,.tbtns .p,.tbtns .x{min-height:46px;font-weight:700;font-size:14px}
 .tbtns .r{background:linear-gradient(180deg,#6b232d 0%,#521a22 100%);border-color:#ff4d5e;font-weight:700}.tbtns .p{background:linear-gradient(180deg,#1f4731 0%,#183625 100%);border-color:#2b6645}
 .tbtns button.on.m{background:#8a6a00;border-color:#cca014}.tbtns button.on.s{background:#2a5d8a;border-color:#4d8ec7}
-.knobs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin-top:12px;padding-top:10px;border-top:1px solid #202638;font-size:12.5px;color:#a5aec7}
-.knobs label{display:flex;align-items:center;gap:6px;min-width:0;font-weight:500}.knobs input{flex:1;min-width:0;width:auto}
+.knobs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin-top:12px;padding-top:10px;border-top:1px solid #202638;font-size:13px;color:#a5aec7}
+.knobs label{display:flex;align-items:center;gap:8px;min-width:0;font-weight:500;min-height:30px}.knobs input{flex:1;min-width:80px;width:auto;min-height:28px}
 .small{font-size:12px;color:#9aa3bd}
 .overlay{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:9;padding:16px}
 .overlay.hidden{display:none}.panel{background:#151925;border:1px solid #343b52;border-radius:16px;padding:20px;max-width:440px;width:100%;max-height:90vh;overflow:auto}
@@ -63,3 +64,16 @@ body.learning [data-act].learnSel{outline:3px solid #ff4d5e}
 .midi-map-wrap{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px}.midi-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
 .midi-item{display:inline-flex;align-items:center;gap:6px;background:#1a1f2e;border:1px solid #303850;border-radius:8px;padding:3px 8px;font-size:12.5px}
 .midi-item button{min-height:26px;padding:2px 8px;font-size:11.5px;border-radius:6px}#midiClearAll.hidden{display:none}
+@media (max-width:480px){
+  body{padding:env(safe-area-inset-top) 10px 36px}
+  header{padding:8px 2px}
+  .master{padding:11px 12px;margin-bottom:10px}
+  .master .row{gap:6px;margin:5px 0}
+  button.big{min-height:46px;padding:10px 12px;font-size:15px;flex:1 1 96px}
+  .meters{flex-wrap:wrap;gap:8px 12px}
+  .meters label{flex:1 1 120px}
+  .tbtns .r,.tbtns .o,.tbtns .p,.tbtns .x{min-height:48px;font-size:14.5px}
+  .knobs{grid-template-columns:1fr;gap:10px;font-size:13.5px}
+  .knobs label{min-height:34px;gap:10px}
+  .knobs input[type=range]{min-height:34px;height:34px;width:100%}
+}
