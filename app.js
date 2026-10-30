@@ -447,18 +447,37 @@ async function saveSession(){
   const data={name,date:Date.now(),sr,S:{...S},M:M?{len:M.len}:null,tracks:tracks.map(t=>({name:t.name,layers:t.layers,len:t.len,originRel:t.originRel,free:t.free,vol:t.vol,pan:t.pan,rev:t.rev,dlyS:t.dlyS,mute:t.mute,solo:t.solo,reverse:t.reverse,half:t.half}))};
   await dbDo('readwrite',s=>s.put(data)); await listSessions(); $('sessList').value=name; $('mixInfo').textContent='Saved session "'+name+'"';
 }
+function resampleLayer(src,newLen){
+  const n0=src.length; if(!n0||!newLen||n0===newLen) return new Float32Array(src);
+  const out=new Float32Array(newLen), scale=(n0-1)/Math.max(1,newLen-1);
+  for(let i=0;i<newLen;i++){
+    const p=i*scale, idx=Math.floor(p), f=p-idx;
+    out[i]=(src[idx]||0)*(1-f)+(src[Math.min(n0-1,idx+1)]||0)*f;
+  }
+  return out;
+}
 async function loadSession(name){
-  const d=await dbDo('readonly',s=>s.get(name)); if(!d) return;
+  const d=await dbDo('readonly',s=>s.get(name)); if(!d) return false;
+  if(!Array.isArray(d.tracks)||(d.sr!==undefined&&(typeof d.sr!=='number'||!Number.isFinite(d.sr)||d.sr<8000||d.sr>192000))){
+    $('mixInfo').textContent=`Cannot load session "${name}": unsupported sample rate (${d.sr}). Current session kept intact.`;
+    return false;
+  }
+  const srcSr=d.sr||sr, ratio=sr/srcSr, resampled=srcSr!==sr;
   masterStop(); tracks.forEach(t=>clearTrack(t,false));
   while(tracks.length<d.tracks.length) mkTrack(tracks.length);
-  M=d.M?{len:d.M.len,t0:now()}:null; Object.assign(S,d.S); syncSettingsUI();
-  d.tracks.forEach((s,i)=>{ const t=tracks[i]; Object.assign(t,{name:s.name||`Track ${i+1}`,layers:s.layers,redo:[],len:s.len,originRel:s.originRel,free:s.free,vol:s.vol,pan:s.pan,rev:s.rev,dlyS:s.dlyS,mute:s.mute,solo:s.solo,reverse:s.reverse,half:s.half});
+  M=d.M&&d.M.len?{len:Math.max(1,Math.round(d.M.len*ratio)),t0:now()}:null; Object.assign(S,d.S); syncSettingsUI();
+  d.tracks.forEach((s,i)=>{
+    const t=tracks[i], newLen=s.len?Math.max(1,Math.round(s.len*ratio)):0;
+    const newLayers=(s.layers||[]).map(L=>resampled?resampleLayer(L,newLen):new Float32Array(L));
+    Object.assign(t,{name:s.name||`Track ${i+1}`,layers:newLayers,redo:[],len:newLen,originRel:s.originRel||0,free:!!s.free,vol:s.vol??.9,pan:s.pan??0,rev:s.rev??0,dlyS:s.dlyS??0,mute:!!s.mute,solo:!!s.solo,reverse:!!s.reverse,half:!!s.half});
     const q=c=>t.el.querySelector(c); q('.tname').textContent=t.name; q('.kv').value=t.vol;q('.kp').value=t.pan;q('.kr').value=t.rev;q('.kd').value=t.dlyS;
     q('.kvV').textContent=fmtPct(t.vol);q('.kpV').textContent=fmtPan(t.pan);q('.krV').textContent=fmtPct(t.rev);q('.kdV').textContent=fmtPct(t.dlyS);
     if(t.p.pan)t.p.pan.value=t.pan; t.rs.gain.value=t.rev; t.ds.gain.value=t.dlyS;
-    renderTrack(t); setState(t,t.layers.length?'stopped':'empty'); });
-  if(d.sr!==sr) $('mixInfo').textContent='Note: session sample rate differs ('+d.sr+')';
+    renderTrack(t); setState(t,t.layers.length?'stopped':'empty');
+  });
+  $('mixInfo').textContent=resampled?`Loaded "${name}" (resampled ${srcSr} Hz → ${sr} Hz)`:`Loaded session "${name}"`;
   updateGains(); loopInfo(); $('sessName').value=name;
+  return true;
 }
 
 /* ---------- settings ---------- */
@@ -504,4 +523,4 @@ if(window.innerWidth<=480) document.querySelectorAll('.master details').forEach(
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 function renameTrack(i,name){ const t=tracks[i]; if(!t)return; t.name=(name||'').trim()||`Track ${i+1}`; refreshUI(t); }
-window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency,renameTrack,updateClipMeters};
+window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency,renameTrack,updateClipMeters,resampleLayer};
