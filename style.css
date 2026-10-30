@@ -13,7 +13,7 @@ input,select{background:#1a1e2a;color:#e6e8ef;border:1px solid #343b52;border-ra
 .meters label{display:flex;align-items:center;gap:6px;flex:1 1 160px}
 .meter{flex:1;height:12px;background:#0a0c11;border-radius:6px;overflow:hidden;min-width:60px}
 .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2c9a5e 0,#2c9a5e 70%,#e0a800 85%,#ff4d5e 100%);background-size:200px 100%}
-.status{font-size:13px;color:#9aa3bd;justify-content:space-between}
+.status{font-size:13px;color:#9aa3bd;justify-content:space-between}.add-track-wrap{display:inline-flex;align-items:center;gap:6px;margin-left:auto}#addTrack:disabled{opacity:.5;cursor:not-allowed}
 details{margin-top:6px}summary{cursor:pointer;color:#9aa3bd;padding:6px 0}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:8px}
 .grid2 label{display:flex;flex-wrap:wrap;align-items:center;gap:6px}

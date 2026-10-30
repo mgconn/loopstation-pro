@@ -57,7 +57,10 @@ function mkTrack(i){
   t.g=ctx.createGain(); t.p=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain();
   t.rs=ctx.createGain(); t.ds=ctx.createGain(); t.rs.gain.value=0; t.ds.gain.value=0;
   t.g.connect(t.p); t.p.connect(master); t.p.connect(t.rs); t.p.connect(t.ds); t.rs.connect(revIn); t.ds.connect(dlyIn);
-  buildTrackUI(t); tracks.push(t); updateGains(); return t;
+  buildTrackUI(t); tracks.push(t); updateGains();
+  if($('addTrack'))$('addTrack').disabled=tracks.length>=MAXT;
+  if($('addTrackHint'))$('addTrackHint').textContent=`(${tracks.length}/${MAXT} · max 8)`;
+  return t;
 }
 function buildTrackUI(t){
   const el=document.createElement('div'); el.className='track'; el.dataset.state='empty';
