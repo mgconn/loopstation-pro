@@ -149,7 +149,7 @@ function finalize(p){
     t.len=len; t.originRel=t.origin-M.t0;
     const L=new Float32Array(len), off=Math.round((p.start-t.origin)*sr);
     for(let i=0;i<len;i++) L[(((off+i)%len)+len)%len]=data[i];
-    t.layers=[L]; t.redo=[];
+    t.layers=[L]; t.redo=[]; t.clearedState=null;
   } else {
     const L=new Float32Array(t.len), off=Math.round((p.start-t.origin)*sr)*(t.half?.5:1);
     const N=t.len, rev=t.reverse, step=t.half?.5:1;
@@ -189,9 +189,21 @@ function doAct(a){
     case 'dub': if(p) endRec(p); else if(t.layers.length) beginRec(t,'dub'); else beginRec(t,'rec'); break;
     case 'play': trackPlay(t); break;
     case 'stop': if(p&&p.end===null) endRec(p); stopSrc(t); if(t.layers.length&&!p) setState(t,'stopped'); break;
-    case 'undo': if(t.layers.length&&!p){t.redo.push(t.layers.pop()); afterEdit(t);} break;
+    case 'undo':
+      if(!p){
+        if(t.layers.length){ t.redo.push(t.layers.pop()); afterEdit(t); }
+        else if(t.clearedState){
+          const cs=t.clearedState; t.clearedState=null;
+          t.layers=cs.layers; t.redo=cs.redo; t.len=cs.len; t.origin=cs.origin; t.originRel=cs.originRel; t.free=cs.free;
+          if(!M&&cs.M) M={len:cs.M.len,t0:cs.M.t0};
+          afterEdit(t);
+        }
+      }
+      break;
     case 'redo': if(t.redo.length&&!p){t.layers.push(t.redo.pop()); afterEdit(t);} break;
-    case 'clear': if(p) pending.splice(pending.indexOf(p),1); stopSrc(t); t.layers=[];t.redo=[];t.len=0;t.buffer=null;t.free=false; setState(t,'empty'); drawWave(t); if(!anyContent()){M=null;playing=false;} loopInfo(); break;
+    case 'clear':
+      if(t.layers.length && !confirm(`Clear ${t.name||('Track '+(t.i+1))}? (Undo can restore cleared layers.)`)) break;
+      clearTrack(t,true); break;
     case 'mute': t.mute=!t.mute; updateGains(); refreshUI(t); break;
     case 'solo': t.solo=!t.solo; updateGains(); refreshUI(t); break;
     case 'reverse': t.reverse=!t.reverse; renderTrack(t); if(t.src) startSrc(t,now()+.02); refreshUI(t); break;
@@ -200,7 +212,17 @@ function doAct(a){
     case 'wav': if(t.buffer) download(encodeWav([t.buffer.getChannelData(0)]),`track${t.i+1}.wav`); break;
   }
 }
-function afterEdit(t){ renderTrack(t); if(!t.layers.length){stopSrc(t);setState(t,'empty'); if(!anyContent()){M=null;playing=false}} else { if(t.src||t.state==='playing') startSrc(t,now()+.02); refreshUI(t);} loopInfo(); }
+function clearTrack(t,keepUndo){
+  const p=pending.find(p=>p.t===t); if(p) pending.splice(pending.indexOf(p),1);
+  stopSrc(t);
+  if(keepUndo&&t.layers.length){
+    t.clearedState={layers:t.layers.slice(),redo:t.redo.slice(),len:t.len,origin:t.origin,originRel:t.originRel,free:t.free,M:M?{len:M.len,t0:M.t0}:null};
+    t.redo=t.layers.slice();
+  } else { t.clearedState=null; t.redo=[]; }
+  t.layers=[]; t.len=0; t.buffer=null; t.free=false; setState(t,'empty'); drawWave(t);
+  if(!anyContent()){M=null;playing=false;} loopInfo();
+}
+function afterEdit(t){ renderTrack(t); if(!t.layers.length){stopSrc(t);setState(t,'empty'); if(!anyContent()){M=null;playing=false}} else { if(t.src||t.state==='playing') startSrc(t,now()+.02); else setState(t,'stopped'); refreshUI(t);} loopInfo(); }
 function trackPlay(t){ if(!t.layers.length) return; if(!playing) { masterPlay(); return; } startSrc(t,now()+.02); setState(t,'playing'); }
 function masterPlay(){ if(!M) return; const w=now()+0.05; M.t0=w; metGrid=w; playing=true;
   tracks.forEach(t=>{ if(t.layers.length){ t.origin=w+(t.free?0:0); startSrc(t,w); setState(t,'playing'); } }); loopInfo(); }
@@ -309,7 +331,7 @@ async function saveSession(){
 }
 async function loadSession(name){
   const d=await dbDo('readonly',s=>s.get(name)); if(!d) return;
-  masterStop(); tracks.forEach(t=>doAct(`t${t.i}:clear`));
+  masterStop(); tracks.forEach(t=>clearTrack(t,false));
   while(tracks.length<d.tracks.length) mkTrack(tracks.length);
   M=d.M?{len:d.M.len,t0:now()}:null; Object.assign(S,d.S); syncSettingsUI();
   d.tracks.forEach((s,i)=>{ const t=tracks[i]; Object.assign(t,{layers:s.layers,redo:[],len:s.len,originRel:s.originRel,free:s.free,vol:s.vol,pan:s.pan,rev:s.rev,dlyS:s.dlyS,mute:s.mute,solo:s.solo,reverse:s.reverse,half:s.half});
