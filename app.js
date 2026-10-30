@@ -154,7 +154,7 @@ function selectTrack(i){ if(i>=tracks.length)return; sel=i; tracks.forEach(t=>{t
 function updateGains(){ const anySolo=tracks.some(t=>t.solo);
   tracks.forEach(t=>t.g.gain.setTargetAtTime(t.vol*(t.mute?0:1)*(anySolo&&!t.solo?0:1),now(),.01)); }
 function renderTrack(t){
-  if(!t.layers.length){t.buffer=null;drawWave(t);return}
+  if(!t.layers.length||!t.len){t.buffer=null;drawWave(t);return}
   const b=ctx.createBuffer(1,t.len,sr),d=b.getChannelData(0);
   for(const L of t.layers) for(let i=0;i<t.len;i++) d[i]+=L[i];
   if(t.reverse) d.reverse();
@@ -285,9 +285,8 @@ function clearTrack(t,keepUndo){
   stopSrc(t);
   if(keepUndo&&t.layers.length){
     t.clearedState={layers:t.layers.slice(),redo:t.redo.slice(),len:t.len,origin:t.origin,originRel:t.originRel,free:t.free,M:M?{len:M.len,t0:M.t0}:null};
-    t.redo=t.layers.slice();
-  } else { t.clearedState=null; t.redo=[]; t.name=`Track ${t.i+1}`; }
-  t.layers=[]; t.len=0; t.buffer=null; t.free=false; setState(t,'empty'); drawWave(t);
+  } else { t.clearedState=null; t.name=`Track ${t.i+1}`; }
+  t.redo=[]; t.layers=[]; t.len=0; t.buffer=null; t.free=false; setState(t,'empty'); drawWave(t);
   if(!anyContent()){M=null;playing=false;} loopInfo();
 }
 function afterEdit(t){ renderTrack(t); if(!t.layers.length){stopSrc(t);setState(t,'empty'); if(!anyContent()){M=null;playing=false}} else { if(t.src||t.state==='playing') startSrc(t,now()+.02); else setState(t,'stopped'); refreshUI(t);} loopInfo(); }
