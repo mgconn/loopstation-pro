@@ -123,7 +123,7 @@ Cloud sync, multi-user, video, new FX types beyond existing reverb/delay sends, 
 | Ticket | Status | Commit | Reviewer notes |
 |--------|--------|--------|----------------|
 | U1 | PASS | 091fe66 | + Track in status row outside details; disables at 8; hint shows n/8. |
-| U2 | CHANGES NEEDED | a2edee8 | Confirm + Undo restore work. Bug: clearTrack sets t.redo=layers copy while t.len=0, so pressing Redo (or Y) right after Clear pushes a layer with len 0 and renderTrack calls ctx.createBuffer(1,0,sr), which throws. Fix: leave redo empty (Undo uses clearedState) or make Redo after Clear restore clearedState too. |
+| U2 | PASS | 5983392 | Confirm + Undo restore work; clearTrack sets t.redo=[] and renderTrack guards !t.len (PASS on re-review of 5983392). |
 | U3 | PASS | 20c2b31 | Coach after Start, lp.coachDismissed persists, highlights Track 1 Rec; Help untouched. |
 | U4 | PASS | 5671204 | Live seconds + beats overlay on armed track, clears on state change. |
 | U5 | PASS | c9d528d | 4-dot pulse on same grid as click (M.t0 or metGrid, which count-in also uses), accent beat 1, stops when off. Visual not output-latency compensated (minor). |
@@ -138,7 +138,7 @@ Cloud sync, multi-user, video, new FX types beyond existing reverb/delay sends, 
 | A2 | PASS | c162995 | Wave 98px, gradient fill, 3px glowing playhead, bar divisions kept. |
 | A3 | PASS | 724c881 | Play all playing style, Record mix pulsing red, meters row aligned. |
 | A4 | PASS | da99ef4 | Rec pulse, armed breathe, reduced-motion disables. |
-| A5 | CHANGES NEEDED (minor) | 70a50b2 | Overlay restyle good. Install hint text shows whenever a service worker is supported and not standalone (e.g. Firefox desktop, which can't install), not only when installable. Gate the hint on beforeinstallprompt (plus an iOS Add to Home Screen case if wanted). |
+| A5 | PASS | e5eb460 | Overlay restyle good; install hint gated on beforeinstallprompt or iOS when not standalone (PASS on re-review of e5eb460). |
 | R1 | PASS (needs runtime check) | 671f658 | worklet.js capture + mix processors, ScriptProcessor fallback, __lp.audioMode exposes path, worklet.js added to SW cache. Note: removing the ScriptProcessor buffer changes round-trip latency, so saved manual latency comp may need re-calibrating. |
 | R2 | PASS | 9c5940d | Cache v2, install fetches with cache:'reload', updateViaCache:'none', ?v=2 on css/js with ignoreSearch match. Remember to bump C and ?v= on every future deploy. |
 | R3 | PASS | 060b430 | Linear resample of layers, M.len and track len by sr ratio; invalid sr refused before clearing current session; message shown. |
@@ -180,7 +180,7 @@ Static code review of all 20 SPRINT commits (one per ticket, naming correct). No
 |--------|--------|--------|----------------|
 | R2 | PASS | 9c5940d | Cache v2, install fetches with cache:'reload', updateViaCache:'none', ?v=2 on css/js with ignoreSearch match. Remember to bump C and ?v= on every future deploy. |
 | U1 | PASS | 091fe66 | + Track in status row outside details; disables at 8; hint shows n/8. |
-| U2 | CHANGES NEEDED | a2edee8 | Confirm + Undo restore work. Bug: clearTrack sets t.redo=layers copy while t.len=0, so pressing Redo (or Y) right after Clear pushes a layer with len 0 and renderTrack calls ctx.createBuffer(1,0,sr), which throws. Fix: leave redo empty (Undo uses clearedState) or make Redo after Clear restore clearedState too. |
+| U2 | PASS | 5983392 | Confirm + Undo restore work; clearTrack sets t.redo=[] and renderTrack guards !t.len (PASS on re-review of 5983392). |
 | A1 | PASS | 1306982 | More padding/type hierarchy; state colors kept. |
 | U3 | PASS | 20c2b31 | Coach after Start, lp.coachDismissed persists, highlights Track 1 Rec; Help untouched. |
 | R1 | PASS (needs runtime check) | 671f658 | worklet.js capture + mix processors, ScriptProcessor fallback, __lp.audioMode exposes path, worklet.js added to SW cache. Note: removing the ScriptProcessor buffer changes round-trip latency, so saved manual latency comp may need re-calibrating. |
@@ -196,7 +196,17 @@ Static code review of all 20 SPRINT commits (one per ticket, naming correct). No
 | U11 | PASS | bfa864f | CLIP LEDs latch 1s at peak >= 0.99 on In and Out. |
 | U12 | PASS | aaab56c | Readouts for Master, Click vol, Input gain, track Vol/Pan/Rev/Delay, also restored on session load. |
 | A4 | PASS | da99ef4 | Rec pulse, armed breathe, reduced-motion disables. |
-| A5 | CHANGES NEEDED (minor) | 70a50b2 | Overlay restyle good. Install hint text shows whenever a service worker is supported and not standalone (e.g. Firefox desktop, which can't install), not only when installable. Gate the hint on beforeinstallprompt (plus an iOS Add to Home Screen case if wanted). |
+| A5 | PASS | e5eb460 | Overlay restyle good; install hint gated on beforeinstallprompt or iOS when not standalone (PASS on re-review of e5eb460). |
 | R3 | PASS | 060b430 | Linear resample of layers, M.len and track len by sr ratio; invalid sr refused before clearing current session; message shown. |
 
 Result: 18 PASS, 2 CHANGES NEEDED (U2 bug, A5 minor). Last reviewed hash 060b430715d6e74064fa1a13d786663348a4a3db.
+
+## Grok re-review - 2026-10-30 ~2:40 PM ET (commits 5983392, e5eb460, 5e8598a; HEAD 5e8598a960e5f5ab2aeb69c1561250c5bdc0dd59)
+
+| Ticket | Result | Commit | Notes |
+|---|---|---|---|
+| U2 | PASS | 5983392 | clearTrack now always sets t.redo=[], so Redo right after Clear is a no-op; Undo still restores layers and the pre-clear redo stack from clearedState; renderTrack also guards !t.len, so createBuffer(1,0,sr) can't be hit. |
+| A5 | PASS | e5eb460 | Install hint shows only when not standalone and beforeinstallprompt fired or on iOS; Firefox desktop and pre-prompt Chromium stay hidden. Bundled keydown change (Escape closes help even with focus in a text field; ? ignored while typing) is a good fix and in scope of U10. |
+| (log) | OK | 5e8598a | SPRINT_GROK_REVIEW.md now tracked with Gemini log and follow-ups. |
+
+Result: all 20 tickets PASS (U1-U12, A1-A5, R1-R3). Remaining note: R1 AudioWorklet path verified by Gemini in headless Chromium only; worth a quick real-mic check by Matt (latency comp may need re-calibrating). Nothing pushed; GitHub Pages deploy waits on Matt's OK. Last reviewed hash 5e8598a960e5f5ab2aeb69c1561250c5bdc0dd59.
