@@ -18,7 +18,7 @@
  <div class="row meters">
   <label>In <div class="meter"><i id="inMeter"></i></div><span id="inClip" class="clip-led" title="Input clip hold">CLIP</span></label>
   <label>Out <div class="meter"><i id="outMeter"></i></div><span id="outClip" class="clip-led" title="Output clip hold">CLIP</span></label>
-  <label>Master <input type="range" id="mVol" min="0" max="1.5" step="0.01" value="1"></label>
+  <label>Master <input type="range" id="mVol" min="0" max="1.5" step="0.01" value="1"> <b id="mVolV" class="sval">100%</b></label>
  </div>
  <div class="row status"><span id="loopInfo">No loop yet — record track 1 to set the loop length.</span><div id="metBeat" class="met-beat" aria-label="Metronome beat indicator" title="Metronome beat pulse"><span class="bdot" data-beat="1">1</span><span class="bdot" data-beat="2">2</span><span class="bdot" data-beat="3">3</span><span class="bdot" data-beat="4">4</span></div><span id="mixInfo"></span><span class="add-track-wrap"><button id="addTrack" title="Add track (max 8)">+ Track</button> <span id="addTrackHint" class="small">(max 8)</span></span></div>
  <details><summary>Timing, metronome &amp; input</summary>
@@ -28,9 +28,9 @@
    <label><input type="checkbox" id="metOn"> Metronome</label>
    <label><input type="checkbox" id="countIn" checked> 1-bar count-in (first loop)</label>
    <label>BPM <input type="number" id="bpm" min="40" max="240" value="100"> <button id="tapBtn" data-act="master:tap">Tap</button></label>
-   <label>Click vol <input type="range" id="clickVol" min="0" max="1" step="0.01" value="0.5"></label>
+   <label>Click vol <input type="range" id="clickVol" min="0" max="1" step="0.01" value="0.5"> <b id="clickVolV" class="sval">50%</b></label>
    <label><input type="checkbox" id="lowCut"> Input low-cut (100 Hz)</label>
-   <label>Input gain <input type="range" id="inGain" min="0" max="3" step="0.01" value="1"></label>
+   <label>Input gain <input type="range" id="inGain" min="0" max="3" step="0.01" value="1"> <b id="inGainV" class="sval">100%</b></label>
    <label><input type="checkbox" id="monOn"> Input monitoring (headphones only!)</label>
    <label>Latency comp: <b id="latAuto"></b> + <input type="range" id="latMan" min="-100" max="300" step="1" value="0"> <b id="latManV">0</b> ms</label>
    <label><button id="calBtn">Auto-calibrate (speakers, no headphones)</button> <span id="calMsg"></span></label>

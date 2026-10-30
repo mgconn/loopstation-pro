@@ -83,6 +83,8 @@ function capRead(t,len){ // read len frames of captured input beginning at ctx t
 }
 
 /* ---------- tracks ---------- */
+const fmtPct=v=>Math.round(v*100)+'%';
+const fmtPan=v=>{const n=Math.round(v*100);return n===0?'0%':(n<0?`L${-n}%`:`R${n}%`);};
 function mkTrack(i){
   const t={i,name:`Track ${i+1}`,layers:[],redo:[],len:0,origin:0,originRel:0,free:false,state:'empty',vol:.9,pan:0,rev:0,dlyS:0,mute:false,solo:false,reverse:false,half:false,buffer:null,src:null,el:null};
   t.g=ctx.createGain(); t.p=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain();
@@ -101,17 +103,17 @@ function buildTrackUI(t){
   <div class="tbtns"><button class="r" ${a('rec')}>● Rec</button><button class="o" ${a('dub')}>⊕ Dub</button><button class="p" ${a('play')}>▶ Play</button><button class="x" ${a('stop')}>■ Stop</button>
   <button class="u" ${a('undo')}>↶ Undo</button><button class="y" ${a('redo')}>↷ Redo</button><button class="m" ${a('mute')}>Mute</button><button class="s" ${a('solo')}>Solo</button>
   <button class="rv" ${a('reverse')}>Rev ⇄</button><button class="h" ${a('half')}>½ spd</button><button class="fr" ${a('free')}>Sync</button><button class="c" ${a('clear')}>Clear</button></div>
-  <div class="knobs"><label>Vol<input type="range" class="kv" min="0" max="1.5" step="0.01" value="${t.vol}"></label>
-  <label>Pan<input type="range" class="kp" min="-1" max="1" step="0.01" value="0"></label>
-  <label>Reverb<input type="range" class="kr" min="0" max="1" step="0.01" value="0"></label>
-  <label>Delay<input type="range" class="kd" min="0" max="1" step="0.01" value="0"></label></div>
+  <div class="knobs"><label>Vol<input type="range" class="kv" min="0" max="1.5" step="0.01" value="${t.vol}"><b class="kvV sval">${fmtPct(t.vol)}</b></label>
+  <label>Pan<input type="range" class="kp" min="-1" max="1" step="0.01" value="0"><b class="kpV sval">${fmtPan(t.pan)}</b></label>
+  <label>Reverb<input type="range" class="kr" min="0" max="1" step="0.01" value="0"><b class="krV sval">${fmtPct(t.rev)}</b></label>
+  <label>Delay<input type="range" class="kd" min="0" max="1" step="0.01" value="0"><b class="kdV sval">${fmtPct(t.dlyS)}</b></label></div>
   <div class="row"><button class="wav" ${a('wav')}>⤓ Export WAV</button></div>`;
   el.addEventListener('pointerdown',()=>selectTrack(t.i));
   el.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',e=>{ if(learning){e.preventDefault();return learnPick(b);} doAct(b.dataset.act); }));
-  el.querySelector('.kv').oninput=e=>{t.vol=+e.target.value;updateGains()};
-  el.querySelector('.kp').oninput=e=>{t.pan=+e.target.value; if(t.p.pan)t.p.pan.value=t.pan};
-  el.querySelector('.kr').oninput=e=>{t.rev=+e.target.value;t.rs.gain.value=t.rev};
-  el.querySelector('.kd').oninput=e=>{t.dlyS=+e.target.value;t.ds.gain.value=t.dlyS};
+  el.querySelector('.kv').oninput=e=>{t.vol=+e.target.value;el.querySelector('.kvV').textContent=fmtPct(t.vol);updateGains()};
+  el.querySelector('.kp').oninput=e=>{t.pan=+e.target.value;el.querySelector('.kpV').textContent=fmtPan(t.pan);if(t.p.pan)t.p.pan.value=t.pan};
+  el.querySelector('.kr').oninput=e=>{t.rev=+e.target.value;el.querySelector('.krV').textContent=fmtPct(t.rev);t.rs.gain.value=t.rev};
+  el.querySelector('.kd').oninput=e=>{t.dlyS=+e.target.value;el.querySelector('.kdV').textContent=fmtPct(t.dlyS);t.ds.gain.value=t.dlyS};
   const tn=el.querySelector('.tname');
   tn.addEventListener('input',()=>{ t.name=tn.textContent.replace(/\s+/g,' ').trim()||`Track ${t.i+1}`; });
   tn.addEventListener('blur',()=>{ t.name=tn.textContent.replace(/\s+/g,' ').trim()||`Track ${t.i+1}`; tn.textContent=t.name; });
@@ -451,7 +453,9 @@ async function loadSession(name){
   while(tracks.length<d.tracks.length) mkTrack(tracks.length);
   M=d.M?{len:d.M.len,t0:now()}:null; Object.assign(S,d.S); syncSettingsUI();
   d.tracks.forEach((s,i)=>{ const t=tracks[i]; Object.assign(t,{name:s.name||`Track ${i+1}`,layers:s.layers,redo:[],len:s.len,originRel:s.originRel,free:s.free,vol:s.vol,pan:s.pan,rev:s.rev,dlyS:s.dlyS,mute:s.mute,solo:s.solo,reverse:s.reverse,half:s.half});
-    const q=c=>t.el.querySelector(c); q('.tname').textContent=t.name; q('.kv').value=t.vol;q('.kp').value=t.pan;q('.kr').value=t.rev;q('.kd').value=t.dlyS; if(t.p.pan)t.p.pan.value=t.pan; t.rs.gain.value=t.rev; t.ds.gain.value=t.dlyS;
+    const q=c=>t.el.querySelector(c); q('.tname').textContent=t.name; q('.kv').value=t.vol;q('.kp').value=t.pan;q('.kr').value=t.rev;q('.kd').value=t.dlyS;
+    q('.kvV').textContent=fmtPct(t.vol);q('.kpV').textContent=fmtPan(t.pan);q('.krV').textContent=fmtPct(t.rev);q('.kdV').textContent=fmtPct(t.dlyS);
+    if(t.p.pan)t.p.pan.value=t.pan; t.rs.gain.value=t.rev; t.ds.gain.value=t.dlyS;
     renderTrack(t); setState(t,t.layers.length?'stopped':'empty'); });
   if(d.sr!==sr) $('mixInfo').textContent='Note: session sample rate differs ('+d.sr+')';
   updateGains(); loopInfo(); $('sessName').value=name;
@@ -465,10 +469,10 @@ $('syncOn').onchange=e=>{S.sync=e.target.checked;saveSettings()}; $('snapOn').on
 $('metOn').onchange=e=>{S.met=e.target.checked;if(S.met&&!M)metGrid=ctx?now():performance.now()/1000;nextClick=null;updateMetPulse();loopInfo()}; $('countIn').onchange=e=>{S.countIn=e.target.checked;saveSettings()};
 $('bpm').onchange=e=>{setBpm(+e.target.value);saveSettings()}; $('tapBtn').onclick=e=>{ if(learning)return learnPick(e.target); tap(); };
 $('latMan').oninput=e=>{S.latMan=+e.target.value;$('latManV').textContent=S.latMan;saveSettings()};
-$('clickVol').oninput=e=>{ if(clickBus) clickBus.gain.value=+e.target.value };
+$('clickVol').oninput=e=>{ const v=+e.target.value; if($('clickVolV'))$('clickVolV').textContent=fmtPct(v); if(clickBus) clickBus.gain.value=v };
 $('lowCut').onchange=e=>{ hp&&(hp.frequency.value=e.target.checked?100:10) };
-$('inGain').oninput=e=>{ inGainN&&(inGainN.gain.value=+e.target.value) };
-$('mVol').oninput=e=>{ master&&(master.gain.value=+e.target.value) };
+$('inGain').oninput=e=>{ const v=+e.target.value; if($('inGainV'))$('inGainV').textContent=fmtPct(v); inGainN&&(inGainN.gain.value=v) };
+$('mVol').oninput=e=>{ const v=+e.target.value; if($('mVolV'))$('mVolV').textContent=fmtPct(v); master&&(master.gain.value=v) };
 $('monOn').onchange=e=>{ if(e.target.checked&&!confirm('Monitoring plays your mic through the output. Use headphones or you will get feedback. Turn on?')){e.target.checked=false;return} monGain&&(monGain.gain.value=e.target.checked?1:0) };
 ['mPlay','mStop','mRec'].forEach(id=>$(id).addEventListener('click',e=>{ if(learning)return learnPick(e.currentTarget); doAct(e.currentTarget.dataset.act); }));
 $('calBtn').onclick=calibrate; $('helpBtn').onclick=toggleHelp; $('helpClose').onclick=toggleHelp;

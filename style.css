@@ -57,7 +57,8 @@ details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{curs
 .tbtns .r{background:linear-gradient(180deg,#6b232d 0%,#521a22 100%);border-color:#ff4d5e;font-weight:700}.tbtns .p{background:linear-gradient(180deg,#1f4731 0%,#183625 100%);border-color:#2b6645}
 .tbtns button.on.m{background:#8a6a00;border-color:#cca014}.tbtns button.on.s{background:#2a5d8a;border-color:#4d8ec7}
 .knobs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin-top:12px;padding-top:10px;border-top:1px solid #202638;font-size:13px;color:#a5aec7}
-.knobs label{display:flex;align-items:center;gap:8px;min-width:0;font-weight:500;min-height:30px}.knobs input{flex:1;min-width:80px;width:auto;min-height:28px}
+.knobs label{display:flex;align-items:center;gap:8px;min-width:0;font-weight:500;min-height:30px}.knobs input{flex:1;min-width:60px;width:auto;min-height:28px}
+.sval{font-size:12px;font-weight:600;color:#d6dced;min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
 .small{font-size:12px;color:#9aa3bd}
 .overlay{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:9;padding:16px}
 .overlay.hidden{display:none}.panel{background:#151925;border:1px solid #343b52;border-radius:16px;padding:20px;max-width:440px;width:100%;max-height:90vh;overflow:auto}
