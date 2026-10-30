@@ -97,7 +97,7 @@ function buildTrackUI(t){
   const el=document.createElement('div'); el.className='track'; el.dataset.state='empty';
   const a=x=>`data-act="t${t.i}:${x}"`;
   el.innerHTML=`<div class="thead"><span class="tname">Track ${t.i+1}</span><span class="len small"></span><span class="st">empty</span></div>
-  <div class="wave"><canvas></canvas><div class="ph"></div><div class="arm-cd"></div></div>
+  <div class="wave"><canvas></canvas><div class="ph"></div><div class="arm-cd"></div><div class="wave-cta">Rec or Space to set the loop</div></div>
   <div class="tbtns"><button class="r" ${a('rec')}>● Rec</button><button class="o" ${a('dub')}>⊕ Dub</button><button class="p" ${a('play')}>▶ Play</button><button class="x" ${a('stop')}>■ Stop</button>
   <button class="u" ${a('undo')}>↶ Undo</button><button class="y" ${a('redo')}>↷ Redo</button><button class="m" ${a('mute')}>Mute</button><button class="s" ${a('solo')}>Solo</button>
   <button class="rv" ${a('reverse')}>Rev ⇄</button><button class="h" ${a('half')}>½ spd</button><button class="fr" ${a('free')}>Sync</button><button class="c" ${a('clear')}>Clear</button></div>
@@ -135,8 +135,15 @@ function refreshUI(t){
   q('.h').classList.toggle('on',t.half);q('.fr').textContent=t.free?'Free':'Sync';q('.fr').classList.toggle('on',t.free);
   q('.p').classList.toggle('on',t.state==='playing'||t.state==='overdubbing');
   q('.len').textContent=t.len?(t.len/sr).toFixed(2)+'s'+(M&&!t.free?' ×'+Math.round(t.len/M.len):'')+' · '+t.layers.length+' layer'+(t.layers.length==1?'':'s'):'';
+  const cta=q('.wave-cta');
+  if(cta){
+    const show=t.i===sel&&t.state==='empty'&&!t.layers.length;
+    cta.textContent=M?'Rec or Space to record track':'Rec or Space to set the loop';
+    cta.classList.toggle('hidden',!show);
+    cta.style.display=show?'flex':'none';
+  }
 }
-function selectTrack(i){ if(i>=tracks.length)return; sel=i; tracks.forEach(t=>t.el.classList.toggle('sel',t.i===i)); }
+function selectTrack(i){ if(i>=tracks.length)return; sel=i; tracks.forEach(t=>{t.el.classList.toggle('sel',t.i===i);refreshUI(t);}); }
 function updateGains(){ const anySolo=tracks.some(t=>t.solo);
   tracks.forEach(t=>t.g.gain.setTargetAtTime(t.vol*(t.mute?0:1)*(anySolo&&!t.solo?0:1),now(),.01)); }
 function renderTrack(t){
