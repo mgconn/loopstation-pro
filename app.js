@@ -360,8 +360,11 @@ $('saveBtn').onclick=saveSession; $('loadBtn').onclick=()=>$('sessList').value&&
 $('delBtn').onclick=async()=>{ const n=$('sessList').value; if(n&&confirm('Delete session "'+n+'"?')){ await dbDo('readwrite',s=>s.delete(n)); listSessions(); } };
 $('midiBtn').onclick=enableMidi;
 $('learnBtn').onclick=()=>{ learning=!learning; document.body.classList.toggle('learning',learning); $('learnBtn').classList.toggle('on',learning); $('learnBtn').textContent=learning?'Done learning':'MIDI learn'; if(learning){enableMidi(); $('midiMsg').textContent='Click a button, then press a controller pedal/pad.'} };
+function dismissCoach(){ localStorage.setItem('lp.coachDismissed','1'); $('coach')?.classList.add('hidden'); tracks.forEach(t=>t.el?.classList.remove('coach-highlight')); }
+function showCoachIfNeeded(){ if(!localStorage.getItem('lp.coachDismissed')){ $('coach')?.classList.remove('hidden'); tracks[0]?.el?.classList.add('coach-highlight'); } }
+$('coachDismiss')&&($('coachDismiss').onclick=dismissCoach);
 $('addTrack').onclick=()=>{ if(ctx&&tracks.length<MAXT){ mkTrack(tracks.length); } };
-$('startBtn').onclick=async()=>{ try{ await startAudio(); for(let i=0;i<4;i++) mkTrack(i); selectTrack(0); $('startOverlay').classList.add('hidden'); listSessions().catch(()=>{}); }
+$('startBtn').onclick=async()=>{ try{ await startAudio(); for(let i=0;i<4;i++) mkTrack(i); selectTrack(0); $('startOverlay').classList.add('hidden'); showCoachIfNeeded(); listSessions().catch(()=>{}); }
   catch(e){ $('startBtn').textContent='Mic error: '+e.message+' — tap to retry'; ctx&&ctx.close(); ctx=null; } };
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});

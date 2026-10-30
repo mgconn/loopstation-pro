@@ -18,6 +18,10 @@ input,select{background:#181c28;color:#e6e8ef;border:1px solid #343b52;border-ra
 details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{cursor:pointer;color:#b0b8d1;font-weight:600;font-size:13.5px;padding:6px 0;user-select:none}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px 14px;padding:8px 0 4px}
 .grid2 label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13.5px;color:#cfd5e6}
+.coach{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(90deg,#1d263d 0%,#232d48 100%);border:1.5px solid #7088d0;border-radius:14px;padding:11px 15px;margin-bottom:14px;box-shadow:0 6px 18px #0006}
+.coach.hidden{display:none}.coach-body{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13.5px;color:#e6e8ef}
+.coach-badge{background:#ff4d5e;color:#fff;font-weight:700;font-size:11.5px;padding:2px 8px;border-radius:999px;letter-spacing:.3px}
+.track.coach-highlight .tbtns .r{box-shadow:0 0 0 2px #ff9aa3,0 0 14px #ff4d5eaa}
 #tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px}
 .track{background:linear-gradient(180deg,#171c2a 0%,#121621 100%);border:1.5px solid #262d42;border-radius:16px;padding:15px 16px;min-width:0;box-shadow:0 6px 18px #00000045;transition:border-color .18s ease,box-shadow .18s ease}
 .track.sel{border-color:#7088d0;box-shadow:0 0 0 1px #7088d044,0 8px 22px #00000055}

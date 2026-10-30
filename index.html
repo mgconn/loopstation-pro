@@ -42,6 +42,10 @@
    <label><button id="midiBtn">Enable MIDI</button> <button id="learnBtn">MIDI learn</button> <span id="midiMsg"></span></label>
   </div></details>
 </section>
+<div id="coach" class="coach hidden" role="region" aria-label="First-run coach">
+ <div class="coach-body"><span class="coach-badge">↓ Track 1</span> <span><b>Headphones check:</b> Wear headphones so your mic doesn't re-record loops. Press <kbd>Space</kbd> or tap <b>● Rec</b> on Track 1 to cycle <b>Record → Play → Overdub → Play</b>.</span></div>
+ <button id="coachDismiss" type="button">Got it</button>
+</div>
 <main id="tracks"></main>
 <div id="help" class="overlay hidden"><div class="panel"><h2>Shortcuts</h2><ul class="keys">
 <li><kbd>1</kbd>–<kbd>8</kbd> select track</li><li><kbd>Space</kbd> record → play → overdub → play</li>
