@@ -372,11 +372,21 @@ function drawWave(t){
   if(M&&!t.free){ const k=Math.round(t.len/M.len); g.fillStyle='#ffffff42'; for(let j=1;j<k;j++) g.fillRect(Math.round(j*w/k),0,Math.max(1,Math.round(dpr)),h); }
 }
 function peak(an){const a=new Float32Array(an.fftSize);an.getFloatTimeDomainData(a);let m=0;for(const v of a)m=Math.max(m,Math.abs(v));return m}
+let inClipUntil=0, outClipUntil=0;
+function updateClipMeters(inPk,outPk){
+  const t=performance.now();
+  if(inPk>=0.99) inClipUntil=t+1000;
+  if(outPk>=0.99) outClipUntil=t+1000;
+  $('inClip')?.classList.toggle('on',t<inClipUntil);
+  $('outClip')?.classList.toggle('on',t<outClipUntil);
+}
 function draw(){
   const n=now();
   updateArmedCountdowns(n);
   updateMetPulse();
-  $('inMeter').style.width=Math.min(100,Math.sqrt(peak(inAn))*100)+'%'; $('outMeter').style.width=Math.min(100,Math.sqrt(peak(outAn))*100)+'%';
+  const inPk=peak(inAn), outPk=peak(outAn);
+  $('inMeter').style.width=Math.min(100,Math.sqrt(inPk)*100)+'%'; $('outMeter').style.width=Math.min(100,Math.sqrt(outPk)*100)+'%';
+  updateClipMeters(inPk,outPk);
   for(const t of tracks){ if(t.src&&t.len){ const rate=t.half?.5:1, eff=t.len/sr/rate; const ph=(((n-(ctx.outputLatency||0)-t.origin)%eff)+eff)%eff/eff; t.ph.style.display='block'; t.ph.style.left=(ph*100)+'%'; } else t.ph.style.display='none'; }
   requestAnimationFrame(draw);
 }
@@ -478,4 +488,4 @@ if(window.innerWidth<=480) document.querySelectorAll('.master details').forEach(
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 function renameTrack(i,name){ const t=tracks[i]; if(!t)return; t.name=(name||'').trim()||`Track ${i+1}`; refreshUI(t); }
-window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency,renameTrack};
+window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},get audioMode(){return audioMode},S,doAct,calibrate,saveSession,loadSession,listSessions,latency,renameTrack,updateClipMeters};

@@ -16,8 +16,8 @@
   <button id="mRec" class="big" data-act="master:rec">● Record mix</button>
  </div>
  <div class="row meters">
-  <label>In <div class="meter"><i id="inMeter"></i></div></label>
-  <label>Out <div class="meter"><i id="outMeter"></i></div></label>
+  <label>In <div class="meter"><i id="inMeter"></i></div><span id="inClip" class="clip-led" title="Input clip hold">CLIP</span></label>
+  <label>Out <div class="meter"><i id="outMeter"></i></div><span id="outClip" class="clip-led" title="Output clip hold">CLIP</span></label>
   <label>Master <input type="range" id="mVol" min="0" max="1.5" step="0.01" value="1"></label>
  </div>
  <div class="row status"><span id="loopInfo">No loop yet — record track 1 to set the loop length.</span><div id="metBeat" class="met-beat" aria-label="Metronome beat indicator" title="Metronome beat pulse"><span class="bdot" data-beat="1">1</span><span class="bdot" data-beat="2">2</span><span class="bdot" data-beat="3">3</span><span class="bdot" data-beat="4">4</span></div><span id="mixInfo"></span><span class="add-track-wrap"><button id="addTrack" title="Add track (max 8)">+ Track</button> <span id="addTrackHint" class="small">(max 8)</span></span></div>
