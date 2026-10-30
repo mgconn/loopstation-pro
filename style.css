@@ -38,9 +38,12 @@ details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{curs
 #tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px}
 .track{background:linear-gradient(180deg,#171c2a 0%,#121621 100%);border:1.5px solid #262d42;border-radius:16px;padding:15px 16px;min-width:0;box-shadow:0 6px 18px #00000045;transition:border-color .18s ease,box-shadow .18s ease}
 .track.sel{border-color:#7088d0;box-shadow:0 0 0 1px #7088d044,0 8px 22px #00000055}
-.track[data-state=recording],.track[data-state=overdubbing]{border-color:#ff4d5e;box-shadow:0 0 18px #ff4d5e55}
-.track[data-state=armed]{border-color:#e0a800;box-shadow:0 0 18px #e0a80055}
+.track[data-state=empty],.track[data-state=stopped],.track[data-state=playing]{animation:none}
+.track[data-state=recording],.track[data-state=overdubbing]{border-color:#ff4d5e;box-shadow:0 0 18px #ff4d5e55;animation:trackRecPulse 1.15s ease-in-out infinite}
+.track[data-state=armed]{border-color:#e0a800;box-shadow:0 0 18px #e0a80055;animation:trackArmedBreathe 2.1s ease-in-out infinite}
 .track[data-state=playing]{border-color:#2c9a5e;box-shadow:0 0 14px #2c9a5e38}
+@keyframes trackRecPulse{0%,100%{box-shadow:0 0 12px #ff4d5e44,inset 0 0 0 #ff4d5e00}50%{box-shadow:0 0 26px #ff4d5eaa,inset 0 0 12px #ff4d5e22}}
+@keyframes trackArmedBreathe{0%,100%{box-shadow:0 0 10px #e0a80033,inset 0 0 0 #e0a80000}50%{box-shadow:0 0 24px #e0a80099,inset 0 0 10px #e0a8001f}}
 .thead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px}
 .tname{font-weight:700;font-size:16px;letter-spacing:.15px;color:#f2f4fa;padding:1px 6px;margin:-1px -6px;border-radius:6px;border:1px solid transparent;cursor:text;outline:none;transition:border-color .15s,background .15s}
 .tname:hover{border-color:#323b54;background:#1c2233}.tname:focus{border-color:#7088d0;background:#1a2030}
@@ -80,4 +83,7 @@ body.learning [data-act].learnSel{outline:3px solid #ff4d5e}
   .knobs{grid-template-columns:1fr;gap:10px;font-size:13.5px}
   .knobs label{min-height:34px;gap:10px}
   .knobs input[type=range]{min-height:34px;height:34px;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .track,.track[data-state=recording],.track[data-state=overdubbing],.track[data-state=armed],#mRec.on,#mRec.rec-active,.met-beat .bdot{animation:none!important;transition:none!important}
 }
