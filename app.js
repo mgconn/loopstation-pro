@@ -394,9 +394,10 @@ function draw(){
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{
-  if(e.target.matches('input[type=text],input:not([type]),input[type=number],select,[contenteditable]')||e.target.isContentEditable) return;
   const k=e.key;
-  if(k==='?'){toggleHelp();return} if(k==='Escape'){$('help').classList.add('hidden');return}
+  if(k==='Escape'){$('help').classList.add('hidden');return}
+  if(e.target?.matches?.('input[type=text],input:not([type]),input[type=number],select,[contenteditable]')||e.target?.isContentEditable) return;
+  if(k==='?'){toggleHelp();return}
   if(!ctx)return;
   if(/^[1-8]$/.test(k)){ const i=+k-1; while(tracks.length<=i&&tracks.length<MAXT) mkTrack(tracks.length); selectTrack(i); return; }
   const map={' ':'cycle',o:'dub',p:'play',s:'stop',z:'undo',y:'redo',m:'mute',l:'solo',r:'reverse',h:'half'};
@@ -510,7 +511,8 @@ let deferredInstall=null;
 function updateInstallHint(){
   const el=$('installHint'); if(!el)return;
   const standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;
-  const installable=!standalone&&(!!deferredInstall||('serviceWorker' in navigator&&location.protocol!=='file:'));
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent||'');
+  const installable=!standalone&&(!!deferredInstall||isIOS);
   el.classList.toggle('hidden',!installable);
   $('installBtn')?.classList.toggle('hidden',!deferredInstall);
 }
