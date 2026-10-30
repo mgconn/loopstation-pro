@@ -339,5 +339,5 @@ $('addTrack').onclick=()=>{ if(ctx&&tracks.length<MAXT){ mkTrack(tracks.length);
 $('startBtn').onclick=async()=>{ try{ await startAudio(); for(let i=0;i<4;i++) mkTrack(i); selectTrack(0); $('startOverlay').classList.add('hidden'); listSessions().catch(()=>{}); }
   catch(e){ $('startBtn').textContent='Mic error: '+e.message+' — tap to retry'; ctx&&ctx.close(); ctx=null; } };
 window.addEventListener('resize',()=>tracks.forEach(drawWave));
-if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 window.__lp={get tracks(){return tracks},get M(){return M},get sr(){return sr},S,doAct,calibrate,saveSession,loadSession,listSessions,latency};
