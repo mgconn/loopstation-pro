@@ -38,8 +38,8 @@ details{margin-top:8px;border-top:1px solid #22283a;padding-top:4px}summary{curs
 .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 10px;border-radius:999px;background:#232838;color:#b8c0d8}
 [data-state=recording] .st,[data-state=overdubbing] .st{background:#ff4d5e;color:#fff}
 [data-state=armed] .st{background:#e0a800;color:#000}[data-state=playing] .st{background:#2c9a5e;color:#fff}
-.wave{position:relative;height:76px;margin:10px 0 12px;background:#090b10;border:1px solid #202638;border-radius:10px;overflow:hidden;box-shadow:inset 0 2px 6px #0009}
-.wave canvas{width:100%;height:100%;display:block}.ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;left:0;display:none}
+.wave{position:relative;height:98px;margin:10px 0 12px;background:linear-gradient(180deg,#080a0f 0%,#0c1018 50%,#080a0f 100%);border:1px solid #22293d;border-radius:10px;overflow:hidden;box-shadow:inset 0 2px 8px #000b}
+.wave canvas{width:100%;height:100%;display:block}.ph{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 10px #ffffffd9,0 0 4px #8ea6ff;border-radius:2px;left:0;display:none;z-index:2;pointer-events:none}
 .arm-cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#1a1505cc;color:#ffd24c;font-weight:700;font-size:13px;letter-spacing:.3px;pointer-events:none;z-index:3}
 .tbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.tbtns button{padding:8px 6px;min-width:0;font-size:13.5px}
 .tbtns .r{background:linear-gradient(180deg,#6b232d 0%,#521a22 100%);border-color:#ff4d5e;font-weight:700}.tbtns .p{background:linear-gradient(180deg,#1f4731 0%,#183625 100%);border-color:#2b6645}

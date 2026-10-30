@@ -343,11 +343,17 @@ function download(blob,name){ window.__lastExport={name,size:blob.size}; const u
 
 /* ---------- drawing ---------- */
 function drawWave(t){
-  const c=t.cv,dpr=devicePixelRatio||1,w=c.clientWidth*dpr,h=c.clientHeight*dpr; c.width=w;c.height=h; const g=c.getContext('2d'); g.clearRect(0,0,w,h);
-  if(!t.buffer)return; const d=t.buffer.getChannelData(0),step=Math.max(1,Math.floor(d.length/w)); g.fillStyle='#7088d0';
+  const c=t.cv,dpr=devicePixelRatio||1,w=Math.max(1,c.clientWidth*dpr),h=Math.max(1,c.clientHeight*dpr); c.width=w;c.height=h; const g=c.getContext('2d'); g.clearRect(0,0,w,h);
+  g.fillStyle='#ffffff12'; g.fillRect(0,Math.floor(h/2),w,1);
+  if(!t.buffer)return; const d=t.buffer.getChannelData(0),step=Math.max(1,Math.floor(d.length/w));
+  const grd=g.createLinearGradient(0,0,0,h);
+  grd.addColorStop(0,'#9bb0ff'); grd.addColorStop(0.35,'#6d88e8'); grd.addColorStop(0.5,'#4a64c2'); grd.addColorStop(0.65,'#6d88e8'); grd.addColorStop(1,'#9bb0ff');
+  g.fillStyle=grd;
   let pk=0.001; for(let i=0;i<d.length;i+=16) pk=Math.max(pk,Math.abs(d[i]));
-  for(let x=0;x<w;x++){let m=0;const s=Math.floor(x*d.length/w);for(let i=s;i<s+step&&i<d.length;i++)m=Math.max(m,Math.abs(d[i]));const y=m/pk*h/2*.95;g.fillRect(x,h/2-y,1,Math.max(1,y*2))}
-  if(M&&!t.free){ const k=Math.round(t.len/M.len); g.fillStyle='#ffffff30'; for(let j=1;j<k;j++) g.fillRect(j*w/k,0,1,h); }
+  for(let x=0;x<w;x++){let m=0;const s=Math.floor(x*d.length/w);for(let i=s;i<s+step&&i<d.length;i++)m=Math.max(m,Math.abs(d[i]));const y=m/pk*h/2*.92;g.fillRect(x,h/2-y,1,Math.max(1.5,y*2))}
+  g.fillStyle='#e2e9ff44';
+  for(let x=0;x<w;x++){let m=0;const s=Math.floor(x*d.length/w);for(let i=s;i<s+step&&i<d.length;i++)m=Math.max(m,Math.abs(d[i]));const y=m/pk*h/2*.34;g.fillRect(x,h/2-y,1,Math.max(1,y*2))}
+  if(M&&!t.free){ const k=Math.round(t.len/M.len); g.fillStyle='#ffffff42'; for(let j=1;j<k;j++) g.fillRect(Math.round(j*w/k),0,Math.max(1,Math.round(dpr)),h); }
 }
 function peak(an){const a=new Float32Array(an.fftSize);an.getFloatTimeDomainData(a);let m=0;for(const v of a)m=Math.max(m,Math.abs(v));return m}
 function draw(){
